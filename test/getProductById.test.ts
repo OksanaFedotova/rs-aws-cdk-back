@@ -1,4 +1,4 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { APIGatewayProxyResult, Context } from 'aws-lambda';
 import { handler } from '../lambda/getProductsById';
 
 describe('handler', () => {
@@ -27,7 +27,7 @@ describe('handler', () => {
     const result = await handler(event, context, callback) as APIGatewayProxyResult;
 
     expect(result.statusCode).toBe(404);
-    expect(result.body).toBeDefined();
+    expect(result.body).toBe(JSON.stringify('No products with id invalidProductId'));
 
   });
 });

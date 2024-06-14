@@ -2,7 +2,7 @@ import {  APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } 
 import {  products } from "./data";
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  if (products) {
+  if (products.length) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json",
