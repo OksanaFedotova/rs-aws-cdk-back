@@ -13,6 +13,11 @@ export class BackStack extends cdk.Stack {
       code: lambda.Code.fromAsset('lambda'), // Points to the lambda directory
       handler: 'productsList.handler', // Points to the 'productsList' file in the lambda directory
     });
+    const productIdFunction = new lambda.Function(this, 'productIdFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X, // Choose any supported Node.js runtime
+      code: lambda.Code.fromAsset('lambda'), // Points to the lambda directory
+      handler: 'getProductsById.handler', // Points to the 'getProductsById' file in the lambda directory
+    });
     // Define the API Gateway resource
     const api = new apigateway.LambdaRestApi(this, 'productsApi', {
       handler: productsListFunction,
@@ -21,6 +26,9 @@ export class BackStack extends cdk.Stack {
      // Define the '/products' resource with a GET method
     const productsResource = api.root.addResource('products');
     productsResource.addMethod('GET');
-        
+    
+    const productWithId = productsResource.addResource('{productId}');
+    productWithId.addMethod('GET', new apigateway.LambdaIntegration(productIdFunction));
+;
   }
 }
