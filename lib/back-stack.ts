@@ -29,6 +29,5 @@ export class BackStack extends cdk.Stack {
     
     const productWithId = productsResource.addResource('{productId}');
     productWithId.addMethod('GET', new apigateway.LambdaIntegration(productIdFunction));
-;
   }
 }
