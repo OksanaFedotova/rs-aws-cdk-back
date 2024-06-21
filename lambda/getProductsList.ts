@@ -13,7 +13,7 @@ const headers = {
   "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 };
 
-const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" }); 
+const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent

@@ -44,22 +44,44 @@ export class BackStack extends cdk.Stack {
       },
     });
 
+    // Определение Lambda функции
+    const createProductFunction = new lambda.Function(
+      this,
+      "CreateProductFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        handler: "createProduct.handler", // Имя файла и обработчика
+        code: lambda.Code.fromAsset("lambda"), // Путь к коду Lambda функции
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName, // Передача имени таблицы через переменную окружения
+        },
+      }
+    );
+
+    // Добавление политики IAM для Lambda функции
+    createProductFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["dynamodb:PutItem"],
+        resources: [productsTable.tableArn], // ARN вашей DynamoDB таблицы
+      })
+    );
+
     productsListFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["dynamodb:Scan"],
-        resources: [productsTable.tableArn], 
+        resources: [productsTable.tableArn],
       })
     );
     productsListFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["dynamodb:Scan"],
-        resources: [stocksTable.tableArn], 
+        resources: [stocksTable.tableArn],
       })
     );
     productIdFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["dynamodb:GetItem"],
-        resources: [productsTable.tableArn], 
+        resources: [productsTable.tableArn],
       })
     );
     // Define the API Gateway resource
@@ -76,6 +98,12 @@ export class BackStack extends cdk.Stack {
     productWithId.addMethod(
       "GET",
       new apigateway.LambdaIntegration(productIdFunction)
+    );
+
+    // Определение метода POST для создания продукта
+    productsResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(createProductFunction)
     );
   }
 }
