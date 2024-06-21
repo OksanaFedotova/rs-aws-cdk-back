@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import { handler } from '../lambda/productsList';
+import { handler } from '../lambda/getProductsList';
 
 describe('handler', () => {
   const context: Context = {} as Context; 

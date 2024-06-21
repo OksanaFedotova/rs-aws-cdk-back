@@ -1,8 +1,8 @@
 export interface IProduct {
-    description: string;
-    id: string;
-    price: number;
-    title: string;
+  description: string;
+  id: string;
+  price: number;
+  title: string;
 }
 export const products: IProduct[] = [
   {
@@ -22,5 +22,5 @@ export const products: IProduct[] = [
     id: "7567ec4b-b10c-48c5-9345-fc73c48a80a3",
     price: 23,
     title: "Travel 3",
-  }
+  },
 ];
