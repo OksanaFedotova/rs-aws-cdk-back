@@ -18,8 +18,8 @@ const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" }); // Укаж�
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  console.log("Incoming request:", event);
   const idParams = event.pathParameters?.productId;
-
   if (!idParams) {
     return {
       statusCode: 400,
@@ -29,9 +29,9 @@ export const handler: APIGatewayProxyHandler = async (
   }
 
   const params = {
-    TableName: "products", // Укажите имя вашей таблицы DynamoDB
+    TableName: "products",
     Key: {
-      id: { S: idParams }, // Предполагается, что id является строковым типом (S)
+      id: { S: idParams },
     },
   };
 

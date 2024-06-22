@@ -19,6 +19,7 @@ export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log("Incoming request:", event);
     const productsParams = {
       TableName: "products",
     };

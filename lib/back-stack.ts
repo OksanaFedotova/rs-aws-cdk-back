@@ -44,28 +44,32 @@ export class BackStack extends cdk.Stack {
       },
     });
 
-    // Определение Lambda функции
     const createProductFunction = new lambda.Function(
       this,
       "CreateProductFunction",
       {
         runtime: lambda.Runtime.NODEJS_20_X,
-        handler: "createProduct.handler", // Имя файла и обработчика
-        code: lambda.Code.fromAsset("lambda"), // Путь к коду Lambda функции
+        handler: "createProduct.handler",
+        code: lambda.Code.fromAsset("lambda"),
         environment: {
-          PRODUCTS_TABLE_NAME: productsTable.tableName, // Передача имени таблицы через переменную окружения
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
         },
       }
     );
 
-    // Добавление политики IAM для Lambda функции
     createProductFunction.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ["dynamodb:PutItem"],
-        resources: [productsTable.tableArn], // ARN вашей DynamoDB таблицы
+        actions: ["dynamodb:PutItem", "dynamodb:TransactWriteItems"],
+        resources: [productsTable.tableArn, stocksTable.tableArn],
       })
     );
 
+    createProductFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["dynamodb:TransactWriteItems"],
+        resources: [stocksTable.tableArn],
+      })
+    );
     productsListFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["dynamodb:Scan"],
@@ -100,10 +104,88 @@ export class BackStack extends cdk.Stack {
       new apigateway.LambdaIntegration(productIdFunction)
     );
 
-    // Определение метода POST для создания продукта
+    //валидация
+    const createProductModel = new apigateway.Model(
+      this,
+      "CreateProductModel",
+      {
+        restApi: api,
+        contentType: "application/json",
+        modelName: "CreateProductModel",
+        schema: {
+          type: apigateway.JsonSchemaType.OBJECT,
+          properties: {
+            title: { type: apigateway.JsonSchemaType.STRING, minLength: 1 },
+            description: { type: apigateway.JsonSchemaType.STRING },
+            price: { type: apigateway.JsonSchemaType.NUMBER, minimum: 0 },
+            count: { type: apigateway.JsonSchemaType.NUMBER, minimum: 1 },
+          },
+          required: ["title", "price", "description", "count"],
+        },
+      }
+    );
+
+    const errorResponseTemplate = JSON.stringify({
+      message: "$context.error.validationErrorString",
+    });
+    const errorResponseModel = new apigateway.Model(
+      this,
+      "ErrorResponseModel",
+      {
+        restApi: api,
+        contentType: "application/json",
+        modelName: "ErrorResponseModel",
+        schema: {
+          type: apigateway.JsonSchemaType.OBJECT,
+          properties: {
+            message: { type: apigateway.JsonSchemaType.STRING },
+          },
+          required: ["message"],
+        },
+      }
+    );
+
+    const requestValidator = new apigateway.RequestValidator(
+      this,
+      "CreateProductRequestValidator",
+      {
+        restApi: api,
+        validateRequestBody: true,
+        validateRequestParameters: false,
+      }
+    );
+
     productsResource.addMethod(
       "POST",
-      new apigateway.LambdaIntegration(createProductFunction)
+      new apigateway.LambdaIntegration(createProductFunction, {
+        integrationResponses: [
+          {
+            selectionPattern: "(\n|.)+",
+            statusCode: "400",
+            responseTemplates: { "application/json": errorResponseTemplate },
+          },
+        ],
+      }),
+      {
+        requestValidator: requestValidator,
+        requestModels: {
+          "application/json": createProductModel,
+        },
+        methodResponses: [
+          {
+            statusCode: "400",
+            responseModels: {
+              "application/json": errorResponseModel,
+            },
+          },
+          {
+            statusCode: "201",
+            responseModels: {
+              "application/json": apigateway.Model.EMPTY_MODEL,
+            },
+          },
+        ],
+      }
     );
   }
 }
