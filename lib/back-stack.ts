@@ -85,7 +85,7 @@ export class BackStack extends cdk.Stack {
     productIdFunction.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["dynamodb:GetItem"],
-        resources: [productsTable.tableArn],
+        resources: [productsTable.tableArn, stocksTable.tableArn],
       })
     );
     // Define the API Gateway resource
@@ -156,7 +156,7 @@ export class BackStack extends cdk.Stack {
     );
 
     productsResource.addMethod(
-      "POST",
+      "PUT",
       new apigateway.LambdaIntegration(createProductFunction, {
         integrationResponses: [
           {

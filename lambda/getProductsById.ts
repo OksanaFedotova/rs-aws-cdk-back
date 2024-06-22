@@ -13,45 +13,65 @@ const headers = {
   "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 };
 
-const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" }); // Укажите ваш регион
+const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  console.log("Incoming request:", event);
-  const idParams = event.pathParameters?.productId;
-  if (!idParams) {
-    return {
-      statusCode: 400,
-      headers,
-      body: JSON.stringify("Missing productId in path parameters"),
-    };
-  }
-
-  const params = {
-    TableName: "products",
-    Key: {
-      id: { S: idParams },
-    },
-  };
-
   try {
-    const command = new GetItemCommand(params);
-    const data = await dynamoDBClient.send(command);
+    console.log("Incoming request:", event);
+    const idParams = event.pathParameters?.productId;
+    if (!idParams) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify("Missing productId in path parameters"),
+      };
+    }
 
-    if (data.Item) {
-      const product = unmarshall(data.Item);
+    const productsParams = {
+      TableName: "products",
+      Key: {
+        id: { S: idParams },
+      },
+    };
+    const productsCommand = new GetItemCommand(productsParams);
+    const productsData = await dynamoDBClient.send(productsCommand);
 
+    if (!productsData.Item) {
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify(`No product found with id ${idParams}`),
+      };
+    }
+
+    const stocksParams = {
+      TableName: "stocks",
+      Key: {
+        product_id: { S: idParams },
+      },
+    };
+    const stocksCommand = new GetItemCommand(stocksParams);
+    const stocksData = await dynamoDBClient.send(stocksCommand);
+
+    if (stocksData.Item) {
+      const stock = unmarshall(stocksData.Item);
+      const product = unmarshall(productsData.Item);
+      const combinedData = {
+        product,
+        stock,
+      };
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(product),
+        body: JSON.stringify(combinedData),
       };
     } else {
       return {
         statusCode: 404,
         headers,
-        body: JSON.stringify(`No product found with id ${idParams}`),
+        body: JSON.stringify(`No stock found for product with id ${idParams}`),
       };
     }
   } catch (error) {
@@ -59,7 +79,7 @@ export const handler: APIGatewayProxyHandler = async (
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify("Error fetching product"),
+      body: JSON.stringify("Error fetching data"),
     };
   }
 };
