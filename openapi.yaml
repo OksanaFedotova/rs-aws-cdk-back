@@ -19,6 +19,54 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+    post:
+      summary: Create a new product
+      description: Creates a new product with specified details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - count
+                - price
+                - description
+                - title
+              properties:
+                count:
+                  type: number
+                price:
+                  type: number
+                description:
+                  type: string
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Successfully created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /products/{productId}:
     get:
       summary: Get product by ID
