@@ -20,16 +20,19 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.log("Incoming request:", event);
+
     const productsParams = {
       TableName: "products",
     };
     const productsCommand = new ScanCommand(productsParams);
     const productsData = await dynamoDBClient.send(productsCommand);
+
     const stocksParams = {
       TableName: "stocks",
     };
     const stocksCommand = new ScanCommand(stocksParams);
     const stocksData = await dynamoDBClient.send(stocksCommand);
+
 
     if (
       productsData.Items &&
@@ -37,14 +40,22 @@ export const handler: APIGatewayProxyHandler = async (
       stocksData.Items &&
       stocksData.Items.length > 0
     ) {
-      const combinedData = {
-        products: productsData.Items.map((item) => unmarshall(item)),
-        stocks: stocksData.Items.map((item) => unmarshall(item)),
-      };
+
+      const products = productsData.Items.map((item) => unmarshall(item));
+      const stocks = stocksData.Items.map((item) => unmarshall(item));
+
+      const combinedProducts = products.map((product) => {
+        const stock = stocks.find((stockItem) => stockItem.product_id === product.id);
+        return {
+          ...product,
+          count: stock ? stock.count : 0, 
+        };
+      });
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(combinedData),
+        body: JSON.stringify(combinedProducts),
       };
     } else {
       return {

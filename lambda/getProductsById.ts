@@ -59,8 +59,8 @@ export const handler: APIGatewayProxyHandler = async (
       const stock = unmarshall(stocksData.Item);
       const product = unmarshall(productsData.Item);
       const combinedData = {
-        product,
-        stock,
+        ...product,
+        count: stock.count
       };
       return {
         statusCode: 200,

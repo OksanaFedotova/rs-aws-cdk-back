@@ -10,6 +10,13 @@ import {
   APIGatewayProxyResult,
 } from "aws-lambda";
 
+const headers = {
+  "Content-Type": "application/json",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+};
+
 const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
 const productsTableName = "products";
 const stocksTableName = "stocks";
@@ -19,12 +26,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     console.log("Incoming request:", event);
-    if (event.httpMethod !== "POST") {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ message: "Method Not Allowed" }),
-      };
-    }
+
     const productId = randomUUID();
     const productData = JSON.parse(event.body!);
     const params = {
@@ -52,11 +54,11 @@ export const handler: APIGatewayProxyHandler = async (
       ],
     };
 
-    // Execute the transaction
     await dynamoDBClient.send(new TransactWriteItemsCommand(params));
 
     return {
       statusCode: 201,
+      headers,
       body: JSON.stringify({
         message: `Product with ID ${productId} created successfully`,
       }),
@@ -65,6 +67,7 @@ export const handler: APIGatewayProxyHandler = async (
     console.error("Error:", error);
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify("Error creating product"),
     };
   }

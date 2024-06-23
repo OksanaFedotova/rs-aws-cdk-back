@@ -92,9 +92,12 @@ export class BackStack extends cdk.Stack {
     const api = new apigateway.LambdaRestApi(this, "productsApi", {
       handler: productsListFunction,
       proxy: false,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS 
+        }
     });
 
-    // Define the '/products' resource with a GET method
     const productsResource = api.root.addResource("products");
     productsResource.addMethod("GET");
 
@@ -125,9 +128,7 @@ export class BackStack extends cdk.Stack {
       }
     );
 
-    const errorResponseTemplate = JSON.stringify({
-      message: "$context.error.validationErrorString",
-    });
+
     const errorResponseModel = new apigateway.Model(
       this,
       "ErrorResponseModel",
@@ -156,16 +157,9 @@ export class BackStack extends cdk.Stack {
     );
 
     productsResource.addMethod(
-      "PUT",
-      new apigateway.LambdaIntegration(createProductFunction, {
-        integrationResponses: [
-          {
-            selectionPattern: "(\n|.)+",
-            statusCode: "400",
-            responseTemplates: { "application/json": errorResponseTemplate },
-          },
-        ],
-      }),
+      "POST",
+      new apigateway.LambdaIntegration(createProductFunction,
+    ),
       {
         requestValidator: requestValidator,
         requestModels: {
@@ -187,5 +181,11 @@ export class BackStack extends cdk.Stack {
         ],
       }
     );
+    api.addGatewayResponse('badRequest', { 
+      type: apigateway.ResponseType.BAD_REQUEST_BODY,
+      statusCode: '400',
+      templates: {
+        'application/json': '{ "message": $context.error.validationErrorString, "statusCode": "400", "type": "$context.error.responseType" }'
+      }})
   }
 }
