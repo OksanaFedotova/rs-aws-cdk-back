@@ -10,7 +10,8 @@
     "test": "npm run build && jest",
     "cdk": "cdk",
     "deploy": "npm run build && cdk deploy",
-    "load-database": "chmod +x ./scripts/put-db.sh && ./scripts/put-db.sh"
+    "load-database": "chmod +x ./scripts/put-db.sh && ./scripts/put-db.sh",
+    "fill-db": "tsc ./scripts/fillDB.ts && node ./scripts/fillDB.js"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.138",
