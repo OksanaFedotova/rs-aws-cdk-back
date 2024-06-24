@@ -18,8 +18,9 @@ const headers = {
 };
 
 const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
-const productsTableName = "products";
-const stocksTableName = "stocks";
+const productsTableName = process.env.PRODUCTS_TABLE_NAME;
+const stocksTableName = process.env.STOCKS_TABLE_NAME;
+
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent

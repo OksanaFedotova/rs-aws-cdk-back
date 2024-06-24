@@ -14,6 +14,9 @@ const headers = {
 };
 
 const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
+const productsTableName = process.env.PRODUCTS_TABLE_NAME;
+const stocksTableName = process.env.STOCKS_TABLE_NAME;
+
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
@@ -22,13 +25,13 @@ export const handler: APIGatewayProxyHandler = async (
     console.log("Incoming request:", event);
 
     const productsParams = {
-      TableName: "products",
+      TableName: productsTableName,
     };
     const productsCommand = new ScanCommand(productsParams);
     const productsData = await dynamoDBClient.send(productsCommand);
 
     const stocksParams = {
-      TableName: "stocks",
+      TableName: stocksTableName,
     };
     const stocksCommand = new ScanCommand(stocksParams);
     const stocksData = await dynamoDBClient.send(stocksCommand);

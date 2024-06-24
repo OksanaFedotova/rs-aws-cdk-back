@@ -14,6 +14,8 @@ const headers = {
 };
 
 const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
+const productsTableName = process.env.PRODUCTS_TABLE_NAME;
+const stocksTableName = process.env.STOCKS_TABLE_NAME;
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
@@ -28,9 +30,9 @@ export const handler: APIGatewayProxyHandler = async (
         body: JSON.stringify("Missing productId in path parameters"),
       };
     }
-
+    
     const productsParams = {
-      TableName: "products",
+      TableName: productsTableName,
       Key: {
         id: { S: idParams },
       },
@@ -45,13 +47,14 @@ export const handler: APIGatewayProxyHandler = async (
         body: JSON.stringify(`No product found with id ${idParams}`),
       };
     }
-
+    
     const stocksParams = {
-      TableName: "stocks",
+      TableName: stocksTableName,
       Key: {
         product_id: { S: idParams },
       },
     };
+
     const stocksCommand = new GetItemCommand(stocksParams);
     const stocksData = await dynamoDBClient.send(stocksCommand);
 

@@ -40,7 +40,8 @@ export class BackStack extends cdk.Stack {
       code: lambda.Code.fromAsset("lambda"), // Points to the lambda directory
       handler: "getProductsById.handler", // Points to the 'getProductsById' file in the lambda directory
       environment: {
-        TABLE_NAME: productsTable.tableName,
+        PRODUCTS_TABLE_NAME: productsTable.tableName,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
       },
     });
 
