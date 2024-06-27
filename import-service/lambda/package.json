@@ -10,6 +10,9 @@
   "types": "./importProductsFile.d.ts",
   "description": "",
   "dependencies": {
-    "aws-sdk": "^2.1649.0"
+    "aws-sdk": "^2.1649.0",
+    "csv-parser": "^3.0.0",
+    "install": "^0.13.0",
+    "npm": "^10.8.1"
   }
 }

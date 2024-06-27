@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 
 
 export class ImportServiceStack extends cdk.Stack {
@@ -34,6 +35,23 @@ export class ImportServiceStack extends cdk.Stack {
         'method.request.querystring.name': true
       }
     });
-  
+     // Создаем Lambda функцию для обработки файла
+    const importFileParserFunction = new lambda.Function(this, 'importFileParserFunction', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset('lambda'),
+      handler: 'importFileParser.handler',
+      environment: {
+        BUCKET_NAME: importBucket.bucketName,
+      },
+    });
+
+    // Даем разрешение на чтение бакета Lambda функции
+     importBucket.grantReadWrite(importFileParserFunction);
+
+    importBucket.addEventNotification(s3.EventType.OBJECT_CREATED, new s3n.LambdaDestination(importFileParserFunction), {
+      prefix: 'uploaded/'
+    });
+    
   }
+  
 }
