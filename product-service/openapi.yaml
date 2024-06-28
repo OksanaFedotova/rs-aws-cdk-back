@@ -1,0 +1,109 @@
+openapi: 3.0.0
+info:
+  title: Products API
+  version: 1.0.0
+  description: API for managing products
+servers:
+  - url: https://qyflqg7cf4.execute-api.eu-west-1.amazonaws.com/prod
+paths:
+  /products:
+    get:
+      summary: Get all products
+      description: Get a list of all products
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      summary: Create a new product
+      description: Creates a new product with specified details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - count
+                - price
+                - description
+                - title
+              properties:
+                count:
+                  type: number
+                price:
+                  type: number
+                description:
+                  type: string
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Successfully created product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /products/{productId}:
+    get:
+      summary: Get product by ID
+      description: Retrieve product information by ID
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the product to retrieve
+      responses:
+        '200':
+          description: Product information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        description:
+          type: string
+        id:
+          type: string
+        price:
+          type: number
+        title:
+          type: string
