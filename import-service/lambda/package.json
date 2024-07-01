@@ -10,9 +10,15 @@
   "types": "./importProductsFile.d.ts",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.606.0",
+    "@aws-sdk/util-dynamodb": "^3.606.0",
     "aws-sdk": "^2.1650.0",
     "csv-parser": "^3.0.0",
     "install": "^0.13.0",
-    "npm": "^10.8.1"
+    "npm": "^10.8.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0"
   }
 }

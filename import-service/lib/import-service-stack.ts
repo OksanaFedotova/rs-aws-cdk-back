@@ -4,6 +4,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -13,6 +14,16 @@ export class ImportServiceStack extends cdk.Stack {
       this,
       "ImportBucket",
       "import-bucket-oksana"
+    );
+    const productsTable = dynamodb.Table.fromTableName(
+      this,
+      "ProductsTable",
+      "products"
+    );
+    const stocksTable = dynamodb.Table.fromTableName(
+      this,
+      "StocksTable",
+      "stocks"
     );
 
     const importProductsFileFunction = new lambda.Function(
@@ -71,5 +82,21 @@ export class ImportServiceStack extends cdk.Stack {
         prefix: "uploaded/",
       }
     );
+    //catalogBatchProcess
+    const catalogBatchProcessFunction = new lambda.Function(
+      this,
+      "catalogBatchProcessFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("lambda"),
+        handler: "catalogBatchProcess.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName
+        },
+      }
+    );
+    productsTable.grantReadWriteData(catalogBatchProcessFunction);
+    stocksTable.grantReadWriteData(catalogBatchProcessFunction);
   }
 }
