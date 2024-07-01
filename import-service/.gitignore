@@ -7,8 +7,4 @@ node_modules
 .cdk.staging
 cdk.out
 
-.DS_Store
-
-dynamodb-scan-policy.json
-
-data
+lib/draft-stack.ts

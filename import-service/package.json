@@ -1,27 +1,35 @@
 {
-  "name": "rs-aws-cdk-back",
+  "name": "import-service",
   "version": "0.1.0",
   "bin": {
-    "rs-aws-cdk-back": "bin/rs-aws-cdk-back.js"
+    "import-service": "bin/import-service.js"
   },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
+    "test": "npm run build && jest",
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.600.0",
     "@types/jest": "^29.5.12",
     "@types/node": "20.12.7",
+    "@types/sinon": "^17.0.3",
+    "aws-cdk": "2.144.0",
+    "aws-sdk-client-mock": "^4.0.1",
+    "aws-sdk-mock": "^6.0.4",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.2",
-    "aws-cdk": "2.144.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.4.5"
   },
   "dependencies": {
+    "@aws-sdk/s3-request-presigner": "^3.600.0",
+    "@aws-sdk/types": "^3.598.0",
+    "@types/aws-lambda": "^8.10.140",
     "aws-cdk-lib": "2.144.0",
     "constructs": "^10.0.0",
+    "csv-parser": "^3.0.0",
     "source-map-support": "^0.5.21"
   }
 }
