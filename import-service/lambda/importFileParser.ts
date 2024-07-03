@@ -1,8 +1,15 @@
 import * as AWS from "aws-sdk";
+import { resolve } from "path";
 const csvParser = require("csv-parser");
 
+interface IMessageBatch {
+  Id: string;
+  MessageBody: string;
+}
+export interface ICSVRow {
+  [key: string]: string;
+}
 const s3 = new AWS.S3();
-
 export async function handler(event: AWSLambda.S3Event): Promise<void> {
   console.log("event", event);
 
@@ -12,49 +19,43 @@ export async function handler(event: AWSLambda.S3Event): Promise<void> {
     const objectKey = record.s3.object.key;
 
     console.log(`Object created in bucket: ${bucketName}, key: ${objectKey}`);
+    const sqs = new AWS.SQS();
+    const queueUrl = process.env.SQS_QUEUE_URL!;
 
     const s3ReadStream = s3
       .getObject({ Bucket: bucketName, Key: objectKey })
       .createReadStream();
 
     const csvParserStream = s3ReadStream.pipe(csvParser());
+    const messageBatch: IMessageBatch[] = [];
+
+    const results: any[] = [];
 
     await new Promise<void>((resolve, reject) => {
-      csvParserStream.on("data", (data: any) => {
-        console.log("CSV Record:", data);
+      csvParserStream.on("data", (data: ICSVRow) => {
+        const obj = data;
+        const keys = Object.keys(obj)[0].split(';');
+        const values = Object.values(obj)[0].split(';');
+        const result = keys.reduce((acc, key, i) => {
+          return { ...acc, [key]: values[i] };
+        }, {});
+        results.push(result);
       });
 
       csvParserStream.on("end", async () => {
         console.log("CSV parsing finished");
-
-        const parsedObjectKey = objectKey.startsWith("uploaded/")
-          ? objectKey.replace("uploaded/", "parsed/")
-          : `parsed/${objectKey}`;
-
+        console.log("CSV results:", results);
         try {
-          await s3
-            .copyObject({
-              Bucket: bucketName,
-              CopySource: `${bucketName}/${objectKey}`,
-              Key: parsedObjectKey,
-            })
+          messageBatch.push({
+            Id: "1",
+            MessageBody: JSON.stringify(results),
+          });
+          await sqs
+            .sendMessageBatch({ QueueUrl: queueUrl, Entries: messageBatch })
             .promise();
-
-          console.log(`Object copied to 'parsed' folder with key: ${parsedObjectKey}`);
-
-          await s3
-            .deleteObject({
-              Bucket: bucketName,
-              Key: objectKey,
-            })
-            .promise();
-
-          console.log("Original object deleted from 'uploaded' folder.");
-
           resolve();
-        } catch (err) {
-          console.error("Error copying or deleting object:", err);
-          reject(err);
+        } catch (e) {
+          reject(e);
         }
       });
 
@@ -63,10 +64,10 @@ export async function handler(event: AWSLambda.S3Event): Promise<void> {
         reject(err);
       });
     });
-
-    console.log("Lambda function execution finished successfully.");
   } catch (err) {
     console.error("Error processing S3 event:", err);
     throw err;
   }
 }
+
+

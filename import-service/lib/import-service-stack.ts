@@ -5,8 +5,8 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as sqs from 'aws-cdk-lib/aws-sqs';
-import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -60,6 +60,32 @@ export class ImportServiceStack extends cdk.Stack {
         },
       }
     );
+    //catalogBatchProcess
+    const catalogBatchProcessFunction = new lambda.Function(
+      this,
+      "catalogBatchProcessFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("lambda"),
+        handler: "catalogBatchProcess.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+        },
+      }
+    );
+    productsTable.grantReadWriteData(catalogBatchProcessFunction);
+    stocksTable.grantReadWriteData(catalogBatchProcessFunction);
+
+    //SQS
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue");
+
+    // Configure SQS to trigger Lambda with a batch size of 5
+    catalogBatchProcessFunction.addEventSource(
+      new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
+    );
     // Создаем Lambda функцию для обработки файла
     const importFileParserFunction = new lambda.Function(
       this,
@@ -70,6 +96,7 @@ export class ImportServiceStack extends cdk.Stack {
         handler: "importFileParser.handler",
         environment: {
           BUCKET_NAME: importBucket.bucketName,
+          SQS_QUEUE_URL: catalogItemsQueue.queueUrl,
         },
       }
     );
@@ -84,29 +111,5 @@ export class ImportServiceStack extends cdk.Stack {
         prefix: "uploaded/",
       }
     );
-    //catalogBatchProcess
-    const catalogBatchProcessFunction = new lambda.Function(
-      this,
-      "catalogBatchProcessFunction",
-      {
-        runtime: lambda.Runtime.NODEJS_20_X,
-        code: lambda.Code.fromAsset("lambda"),
-        handler: "catalogBatchProcess.handler",
-        environment: {
-          PRODUCTS_TABLE_NAME: productsTable.tableName,
-          STOCKS_TABLE_NAME: stocksTable.tableName
-        },
-      }
-    );
-    productsTable.grantReadWriteData(catalogBatchProcessFunction);
-    stocksTable.grantReadWriteData(catalogBatchProcessFunction);
-
-    //SQS
-    const catalogItemsQueue = new sqs.Queue(this, 'CatalogItemsQueue');
-    
-    // Configure SQS to trigger Lambda with a batch size of 5
-    catalogBatchProcessFunction.addEventSource(new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
-      batchSize: 5
-    }));
   }
 }
