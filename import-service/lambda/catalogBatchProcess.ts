@@ -4,6 +4,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 import * as uuid from "uuid";
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
 interface Message {
   body: string;
@@ -22,21 +23,42 @@ interface Product {
 
 const productsTableName = process.env.PRODUCTS_TABLE_NAME!;
 const stocksTableName = process.env.STOCKS_TABLE_NAME!;
+const createProductTopicArn = process.env.CREATE_PRODUCT_TOPIC_ARN;
 
 export const handler = async (event: Event): Promise<void> => {
   try {
     console.log(event.Records);
     const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
+    const snsClient = new SNSClient({ region: "eu-west-1" });
+
+    if (!createProductTopicArn) {
+      console.error("CREATE_PRODUCT_TOPIC_ARN environment variable not set");
+    }
 
     for (const message of event.Records) {
-      console.log(message.body);
+      //console.log(message.body);
       const products: Product[] = JSON.parse(message.body);
-      console.log(products);
-
+      //console.log(products);
+      if (createProductTopicArn) {
+        const publishCommand = new PublishCommand({
+          TopicArn: createProductTopicArn,
+          Message: message.body,
+        });
+        try {
+          await snsClient.send(publishCommand);
+          console.log("Message published to SNS topic");
+        } catch (error) {
+          console.error("Error publishing message to SNS topic:", error);
+        }
+      } else {
+        console.log(
+          "CREATE_PRODUCT_TOPIC_ARN environment variable not set, skipping SNS publishing"
+        );
+      }
       for (const product of products) {
         const { description, price, title, count } = product;
 
-        if (!description || !price  || !title || !count) {
+        if (!description || !price || !title || !count) {
           console.error("Missing required fields in messageBody");
           continue;
         }

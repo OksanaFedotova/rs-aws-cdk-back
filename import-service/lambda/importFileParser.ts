@@ -34,8 +34,8 @@ export async function handler(event: AWSLambda.S3Event): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       csvParserStream.on("data", (data: ICSVRow) => {
         const obj = data;
-        const keys = Object.keys(obj)[0].split(';');
-        const values = Object.values(obj)[0].split(';');
+        const keys = Object.keys(obj)[0].split(";");
+        const values = Object.values(obj)[0].split(";");
         const result = keys.reduce((acc, key, i) => {
           return { ...acc, [key]: values[i] };
         }, {});
@@ -69,5 +69,3 @@ export async function handler(event: AWSLambda.S3Event): Promise<void> {
     throw err;
   }
 }
-
-
