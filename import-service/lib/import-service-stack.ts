@@ -111,5 +111,6 @@ export class ImportServiceStack extends cdk.Stack {
         prefix: "uploaded/",
       }
     );
+    catalogItemsQueue.grantSendMessages(importFileParserFunction)
   }
 }

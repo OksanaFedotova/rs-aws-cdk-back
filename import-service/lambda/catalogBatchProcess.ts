@@ -41,6 +41,11 @@ export const handler = async (event: Event): Promise<void> => {
           continue;
         }
 
+        if (isNaN(parseFloat(price)) || isNaN(parseInt(count))) {
+          console.error("Price and count must be numeric");
+          continue;
+        }
+
         const productId = uuid.v4().toString();
 
         const params = {
