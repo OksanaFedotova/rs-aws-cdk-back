@@ -6,15 +6,15 @@ import { marshall } from "@aws-sdk/util-dynamodb";
 import * as uuid from "uuid";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 
-interface Message {
+export interface Message {
   body: string;
 }
 
-interface Event {
+export interface Event {
   Records: Message[];
 }
 
-interface Product {
+export interface Product {
   description: string;
   price: string;
   title: string;
@@ -26,6 +26,7 @@ const stocksTableName = process.env.STOCKS_TABLE_NAME!;
 const createProductTopicArn = process.env.CREATE_PRODUCT_TOPIC_ARN;
 
 export const handler = async (event: Event): Promise<void> => {
+  console.log(event);
   try {
     console.log(event.Records);
     const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });

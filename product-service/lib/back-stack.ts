@@ -4,6 +4,10 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 
 export class BackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -189,5 +193,42 @@ export class BackStack extends cdk.Stack {
       templates: {
         'application/json': '{ "message": $context.error.validationErrorString, "statusCode": "400", "type": "$context.error.responseType" }'
       }})
+          // Create the SNS topic
+    const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
+      topicName: 'create-product-topic',
+    });
+
+  // Add email subscription to the SNS topic
+    createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription('oxana-fedotova@yandex.ru')
+    );
+
+    //catalogBatchProcess
+    const catalogBatchProcessFunction = new lambda.Function(
+      this,
+      "catalogBatchProcessFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("lambda"),
+        handler: "catalogBatchProcess.handler",
+        environment: {
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCKS_TABLE_NAME: stocksTable.tableName,
+          CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn
+        },
+      }
+    );
+    productsTable.grantReadWriteData(catalogBatchProcessFunction);
+    stocksTable.grantReadWriteData(catalogBatchProcessFunction);
+    createProductTopic.grantPublish(catalogBatchProcessFunction);
+
+    //SQS
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue");
+    // Configure SQS to trigger Lambda with a batch size of 5
+    catalogBatchProcessFunction.addEventSource(
+      new lambdaEventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+      })
+    );
   }
 }
