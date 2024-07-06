@@ -36,25 +36,7 @@ export const handler = async (event: Event): Promise<void> => {
     }
 
     for (const message of event.Records) {
-      //console.log(message.body);
       const products: Product[] = JSON.parse(message.body);
-      //console.log(products);
-      if (createProductTopicArn) {
-        const publishCommand = new PublishCommand({
-          TopicArn: createProductTopicArn,
-          Message: message.body,
-        });
-        try {
-          await snsClient.send(publishCommand);
-          console.log("Message published to SNS topic");
-        } catch (error) {
-          console.error("Error publishing message to SNS topic:", error);
-        }
-      } else {
-        console.log(
-          "CREATE_PRODUCT_TOPIC_ARN environment variable not set, skipping SNS publishing"
-        );
-      }
       for (const product of products) {
         const { description, price, title, count } = product;
 
@@ -98,6 +80,29 @@ export const handler = async (event: Event): Promise<void> => {
         try {
           await dynamoDBClient.send(new TransactWriteItemsCommand(params));
           console.log(`Wrote product with ID ${productId} to DynamoDB`);
+
+              if (createProductTopicArn) {
+        const publishCommand = new PublishCommand({
+          TopicArn: createProductTopicArn,
+          Message: JSON.stringify(product),
+         MessageAttributes: {
+          price: {
+              DataType: "Number",
+              StringValue: product.price,
+            },
+        }
+        });
+        try {
+          await snsClient.send(publishCommand);
+          console.log("Message published to SNS topic");
+        } catch (error) {
+          console.error("Error publishing message to SNS topic:", error);
+        }
+      } else {
+        console.log(
+          "CREATE_PRODUCT_TOPIC_ARN environment variable not set, skipping SNS publishing"
+        );
+      }
         } catch (error) {
           console.error("Error writing to DynamoDB:", error);
         }

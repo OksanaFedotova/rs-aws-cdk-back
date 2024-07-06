@@ -200,9 +200,23 @@ export class BackStack extends cdk.Stack {
 
     // Add email subscription to the SNS topic
     createProductTopic.addSubscription(
-      new subscriptions.EmailSubscription("oxana-fedotova@yandex.ru")
-    );
-
+      new subscriptions.EmailSubscription("oxana-fedotova@yandex.ru", {
+       filterPolicy: {
+         price: sns.SubscriptionFilter.numericFilter({
+           lessThanOrEqualTo: 100,
+         }),
+       },
+     })
+   );
+     createProductTopic.addSubscription(
+      new subscriptions.EmailSubscription("oxana-fedotova@mail.ru", {
+       filterPolicy: {
+         price: sns.SubscriptionFilter.numericFilter({
+           greaterThan: 100,
+         }),
+       },
+     })
+   );
     //catalogBatchProcess
     const catalogBatchProcessFunction = new lambda.Function(
       this,
