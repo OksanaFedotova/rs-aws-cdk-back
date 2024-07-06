@@ -59,8 +59,13 @@ export class ImportServiceStack extends cdk.Stack {
         },
       }
     );
-    const catalogItemsQueueArn = 'arn:aws:sqs:eu-west-1:905418269002:BackStack-CatalogItemsQueueB3B6CE23-jMbspiPg9JAP'
-    const catalogItemsQueue = sqs.Queue.fromQueueArn(this, 'catalogItemsQueue', catalogItemsQueueArn )
+    const catalogItemsQueueArn =
+      "arn:aws:sqs:eu-west-1:905418269002:BackStack-CatalogItemsQueueB3B6CE23-jMbspiPg9JAP";
+    const catalogItemsQueue = sqs.Queue.fromQueueArn(
+      this,
+      "catalogItemsQueue",
+      catalogItemsQueueArn
+    );
     // Создаем Lambda функцию для обработки файла
     const importFileParserFunction = new lambda.Function(
       this,
@@ -86,7 +91,6 @@ export class ImportServiceStack extends cdk.Stack {
         prefix: "uploaded/",
       }
     );
-    catalogItemsQueue.grantSendMessages(importFileParserFunction)
-    
+    catalogItemsQueue.grantSendMessages(importFileParserFunction);
   }
 }

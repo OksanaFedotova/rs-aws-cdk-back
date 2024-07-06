@@ -6,8 +6,8 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
-import * as sns from 'aws-cdk-lib/aws-sns';
-import * as subscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as subscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 
 export class BackStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -100,8 +100,8 @@ export class BackStack extends cdk.Stack {
       proxy: false,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS 
-        }
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
     });
 
     const productsResource = api.root.addResource("products");
@@ -134,7 +134,6 @@ export class BackStack extends cdk.Stack {
       }
     );
 
-
     const errorResponseModel = new apigateway.Model(
       this,
       "ErrorResponseModel",
@@ -164,8 +163,7 @@ export class BackStack extends cdk.Stack {
 
     productsResource.addMethod(
       "POST",
-      new apigateway.LambdaIntegration(createProductFunction,
-    ),
+      new apigateway.LambdaIntegration(createProductFunction),
       {
         requestValidator: requestValidator,
         requestModels: {
@@ -187,20 +185,22 @@ export class BackStack extends cdk.Stack {
         ],
       }
     );
-    api.addGatewayResponse('badRequest', { 
+    api.addGatewayResponse("badRequest", {
       type: apigateway.ResponseType.BAD_REQUEST_BODY,
-      statusCode: '400',
+      statusCode: "400",
       templates: {
-        'application/json': '{ "message": $context.error.validationErrorString, "statusCode": "400", "type": "$context.error.responseType" }'
-      }})
-          // Create the SNS topic
-    const createProductTopic = new sns.Topic(this, 'CreateProductTopic', {
-      topicName: 'create-product-topic',
+        "application/json":
+          '{ "message": $context.error.validationErrorString, "statusCode": "400", "type": "$context.error.responseType" }',
+      },
+    });
+    // Create the SNS topic
+    const createProductTopic = new sns.Topic(this, "CreateProductTopic", {
+      topicName: "create-product-topic",
     });
 
-  // Add email subscription to the SNS topic
+    // Add email subscription to the SNS topic
     createProductTopic.addSubscription(
-      new subscriptions.EmailSubscription('oxana-fedotova@yandex.ru')
+      new subscriptions.EmailSubscription("oxana-fedotova@yandex.ru")
     );
 
     //catalogBatchProcess
@@ -214,7 +214,7 @@ export class BackStack extends cdk.Stack {
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCKS_TABLE_NAME: stocksTable.tableName,
-          CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn
+          CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
         },
       }
     );

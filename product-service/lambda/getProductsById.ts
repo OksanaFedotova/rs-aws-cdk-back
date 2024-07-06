@@ -30,7 +30,7 @@ export const handler: APIGatewayProxyHandler = async (
         body: JSON.stringify("Missing productId in path parameters"),
       };
     }
-    
+
     const productsParams = {
       TableName: productsTableName,
       Key: {
@@ -47,7 +47,7 @@ export const handler: APIGatewayProxyHandler = async (
         body: JSON.stringify(`No product found with id ${idParams}`),
       };
     }
-    
+
     const stocksParams = {
       TableName: stocksTableName,
       Key: {
@@ -63,7 +63,7 @@ export const handler: APIGatewayProxyHandler = async (
       const product = unmarshall(productsData.Item);
       const combinedData = {
         ...product,
-        count: stock.count
+        count: stock.count,
       };
       return {
         statusCode: 200,

@@ -17,7 +17,6 @@ const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });
 const productsTableName = process.env.PRODUCTS_TABLE_NAME;
 const stocksTableName = process.env.STOCKS_TABLE_NAME;
 
-
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -36,22 +35,22 @@ export const handler: APIGatewayProxyHandler = async (
     const stocksCommand = new ScanCommand(stocksParams);
     const stocksData = await dynamoDBClient.send(stocksCommand);
 
-
     if (
       productsData.Items &&
       productsData.Items.length > 0 &&
       stocksData.Items &&
       stocksData.Items.length > 0
     ) {
-
       const products = productsData.Items.map((item) => unmarshall(item));
       const stocks = stocksData.Items.map((item) => unmarshall(item));
 
       const combinedProducts = products.map((product) => {
-        const stock = stocks.find((stockItem) => stockItem.product_id === product.id);
+        const stock = stocks.find(
+          (stockItem) => stockItem.product_id === product.id
+        );
         return {
           ...product,
-          count: stock ? stock.count : 0, 
+          count: stock ? stock.count : 0,
         };
       });
 

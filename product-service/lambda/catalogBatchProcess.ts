@@ -26,7 +26,6 @@ const stocksTableName = process.env.STOCKS_TABLE_NAME!;
 const createProductTopicArn = process.env.CREATE_PRODUCT_TOPIC_ARN;
 
 export const handler = async (event: Event): Promise<void> => {
-  console.log(event);
   try {
     console.log(event.Records);
     const dynamoDBClient = new DynamoDBClient({ region: "eu-west-1" });

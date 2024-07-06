@@ -11,14 +11,14 @@ paths:
       summary: Get all products
       description: Get a list of all products
       responses:
-        '200':
+        "200":
           description: List of products
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Product'
+                  $ref: "#/components/schemas/Product"
     post:
       summary: Create a new product
       description: Creates a new product with specified details
@@ -43,13 +43,13 @@ paths:
                 title:
                   type: string
       responses:
-        '200':
+        "200":
           description: Successfully created product
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
-        '400':
+                $ref: "#/components/schemas/Product"
+        "400":
           description: Invalid request payload
           content:
             application/json:
@@ -58,7 +58,7 @@ paths:
                 properties:
                   message:
                     type: string
-        '500':
+        "500":
           description: Internal server error
           content:
             application/json:
@@ -79,13 +79,13 @@ paths:
             type: string
           description: ID of the product to retrieve
       responses:
-        '200':
+        "200":
           description: Product information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
-        '404':
+                $ref: "#/components/schemas/Product"
+        "404":
           description: Product not found
           content:
             application/json:
