@@ -42,6 +42,24 @@ export class ImportServiceStack extends cdk.Stack {
 
     importBucket.grantReadWrite(importProductsFileFunction);
 
+     // Импортируем ARN Lambda функции из первого стека
+    const basicAuthorizerFunctionArn = cdk.Fn.importValue('BasicAuthorizerFunctionArn');
+    console.log(basicAuthorizerFunctionArn)
+    // Импортируем Lambda функцию для авторизатора
+    const authorizerFunction = lambda.Function.fromFunctionArn(this, 'AuthorizerFunction', basicAuthorizerFunctionArn);
+ 
+     // Проверка типа значения ARN
+    if (typeof basicAuthorizerFunctionArn !== 'string') {
+      throw new Error(`Invalid ARN: ${basicAuthorizerFunctionArn}`);
+    }
+
+
+    // Создаем авторизатор Lambda для API Gateway
+    const authorizer = new apigateway.TokenAuthorizer(this, 'LambdaAuthorizer', {
+      handler: authorizerFunction,
+      identitySource: apigateway.IdentitySource.header('Authorization'),
+    });
+
     const api = new apigateway.RestApi(this, "importApi", {
       restApiName: "Import Service",
       cloudWatchRole: true,
@@ -57,6 +75,8 @@ export class ImportServiceStack extends cdk.Stack {
         requestParameters: {
           "method.request.querystring.name": true,
         },
+        authorizer,
+        authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
     const catalogItemsQueueArn =
@@ -92,5 +112,7 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
     catalogItemsQueue.grantSendMessages(importFileParserFunction);
+
+
   }
 }

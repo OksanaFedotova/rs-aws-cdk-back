@@ -8,20 +8,20 @@ export class AuthorizationServiceStack extends cdk.Stack {
     super(scope, id, props);
 
     // Создаем Lambda функцию
-    const basicAuthorizerFunсtion = new lambda.Function(this, 'basicAuthorizer', {
+    const basicAuthorizerFunction = new lambda.Function(this, 'basicAuthorizer', {
       runtime: lambda.Runtime.NODEJS_20_X,
       handler: 'basicAuthorizer.handler',
       code: lambda.Code.fromAsset("lambda"),
     });
 
     // Пример использования метода grant для предоставления разрешений
-    basicAuthorizerFunсtion.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
+    basicAuthorizerFunction.grantInvoke(new iam.ServicePrincipal('apigateway.amazonaws.com'));
 
     // Определяем Output для имени Lambda функции
-    new cdk.CfnOutput(this, 'BasicAuthorizerFunctionOutput', {
-      value: basicAuthorizerFunсtion.functionName,
-      description: 'Name of the Basic Authorizer Lambda function',
-      exportName: 'BasicAuthorizerFunctionName', 
+    new cdk.CfnOutput(this, 'BasicAuthorizerFunctionArnOutput', {
+      value: basicAuthorizerFunction.functionArn,
+      description: 'ARN of the Basic Authorizer Lambda function',
+      exportName: 'BasicAuthorizerFunctionArn', // Имя для экспорта в CloudFormation Outputs
     });
   }
 }
