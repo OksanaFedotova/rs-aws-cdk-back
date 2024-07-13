@@ -44,7 +44,7 @@ export class ImportServiceStack extends cdk.Stack {
 
      // Импортируем ARN Lambda функции из первого стека
     const basicAuthorizerFunctionArn = cdk.Fn.importValue('BasicAuthorizerFunctionArn');
-    console.log(basicAuthorizerFunctionArn)
+
     // Импортируем Lambda функцию для авторизатора
     const authorizerFunction = lambda.Function.fromFunctionArn(this, 'AuthorizerFunction', basicAuthorizerFunctionArn);
  
@@ -63,6 +63,10 @@ export class ImportServiceStack extends cdk.Stack {
     const api = new apigateway.RestApi(this, "importApi", {
       restApiName: "Import Service",
       cloudWatchRole: true,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+      },
     });
 
     const importProductsFileResource = api.root.addResource("import");
