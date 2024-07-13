@@ -20,9 +20,9 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     const encodedCredentials = authHeader.split(' ')[1];
     const credentials = Buffer.from(encodedCredentials, 'base64').toString('utf-8');
     const [username, password] = credentials.split(':');
-    console.log(username, password)
+
     const expectedPassword = process.env[username];
-    console.log(expectedPassword)
+
     if (!expectedPassword || expectedPassword !== password) {
       throw new Error('Forbidden: Invalid credentials');
     }
@@ -42,7 +42,6 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
     };
   } catch (error) {
     console.error('Error:', (error as Error).message);
-
     return {
       principalId: 'unauthorized',
       policyDocument: {
@@ -54,6 +53,9 @@ export const handler = async (event: APIGatewayTokenAuthorizerEvent): Promise<AP
             Resource: '*',
           },
         ],
+      },
+      context: {
+        statusCode: (error as Error).message.includes('Unauthorized') ? 401 : 403,
       },
     };
   }

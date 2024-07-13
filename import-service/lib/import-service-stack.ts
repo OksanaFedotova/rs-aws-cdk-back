@@ -42,36 +42,53 @@ export class ImportServiceStack extends cdk.Stack {
 
     importBucket.grantReadWrite(importProductsFileFunction);
 
-     // Импортируем ARN Lambda функции из первого стека
-    const basicAuthorizerFunctionArn = cdk.Fn.importValue('BasicAuthorizerFunctionArn');
+    const basicAuthorizerFunctionArn = cdk.Fn.importValue(
+      "BasicAuthorizerFunctionArn"
+    );
 
-    // Импортируем Lambda функцию для авторизатора
-    const authorizerFunction = lambda.Function.fromFunctionArn(this, 'AuthorizerFunction', basicAuthorizerFunctionArn);
- 
-     // Проверка типа значения ARN
-    if (typeof basicAuthorizerFunctionArn !== 'string') {
+
+    const authorizerFunction = lambda.Function.fromFunctionArn(
+      this,
+      "AuthorizerFunction",
+      basicAuthorizerFunctionArn
+    );
+
+    if (typeof basicAuthorizerFunctionArn !== "string") {
       throw new Error(`Invalid ARN: ${basicAuthorizerFunctionArn}`);
     }
 
-
-    // Создаем авторизатор Lambda для API Gateway
-    const authorizer = new apigateway.TokenAuthorizer(this, 'LambdaAuthorizer', {
-      handler: authorizerFunction,
-      identitySource: apigateway.IdentitySource.header('Authorization'),
-    });
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "LambdaAuthorizer",
+      {
+        handler: authorizerFunction,
+        identitySource: apigateway.IdentitySource.header("Authorization"),
+      }
+    );
 
     const api = new apigateway.RestApi(this, "importApi", {
       restApiName: "Import Service",
       cloudWatchRole: true,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowHeaders: [
+          "Content-Type",
+          "X-Amz-Date",
+          "Authorization",
+          "X-Api-Key",
+          "X-Amz-Security-Token",
+        ],
         allowMethods: apigateway.Cors.ALL_METHODS,
       },
     });
 
     const importProductsFileResource = api.root.addResource("import");
-    const importProductsFileLambdaIntegration =
-      new apigateway.LambdaIntegration(importProductsFileFunction);
+
+     const importProductsFileLambdaIntegration =
+      new apigateway.LambdaIntegration(importProductsFileFunction, {
+        proxy: true,
+      });
+
     importProductsFileResource.addMethod(
       "GET",
       importProductsFileLambdaIntegration,
@@ -83,6 +100,24 @@ export class ImportServiceStack extends cdk.Stack {
         authorizationType: apigateway.AuthorizationType.CUSTOM,
       }
     );
+  const responseHeaders = {
+        "Access-Control-Allow-Origin": "'*'",
+        "Access-Control-Allow-Headers":
+        "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+        "Access-Control-Allow-Methods": "'OPTIONS,GET,PUT'"
+    }
+    api.addGatewayResponse("GatewayResponseUnauthorized", {
+      type: apigateway.ResponseType.UNAUTHORIZED,
+      responseHeaders,
+      statusCode:"401"
+    });
+
+    api.addGatewayResponse("GatewayResponseAccessDenied", {
+      type: apigateway.ResponseType.ACCESS_DENIED,
+      responseHeaders,
+      statusCode:"403"
+    });
+
     const catalogItemsQueueArn =
       "arn:aws:sqs:eu-west-1:905418269002:BackStack-CatalogItemsQueueB3B6CE23-jMbspiPg9JAP";
     const catalogItemsQueue = sqs.Queue.fromQueueArn(
@@ -116,7 +151,5 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
     catalogItemsQueue.grantSendMessages(importFileParserFunction);
-
-
   }
 }
