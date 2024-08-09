@@ -14,11 +14,11 @@ export class AppService {
   async handleRequest(req: Request, res: Response): Promise<void> {
     const { method, originalUrl, query, body, headers } = req;
     const recipientName = originalUrl.split('/')[1];
-    console.log(originalUrl.split('/')[1]);
+    //console.log(originalUrl.split('/')[1]);
     const recipientURL = this.configService.get<string>(
       `${recipientName.toUpperCase()}`,
     );
-    console.log(recipientURL);
+    //console.log(recipientURL);
 
     if (!recipientURL) {
       res
