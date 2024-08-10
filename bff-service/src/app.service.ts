@@ -14,11 +14,9 @@ export class AppService {
   async handleRequest(req: Request, res: Response): Promise<void> {
     const { method, originalUrl, query, body, headers } = req;
     const recipientName = originalUrl.split('/')[1];
-    //console.log(originalUrl.split('/')[1]);
     const recipientURL = this.configService.get<string>(
       `${recipientName.toUpperCase()}`,
     );
-    //console.log(recipientURL);
 
     if (!recipientURL) {
       res
@@ -51,12 +49,14 @@ export class AppService {
           Authorization: authorizationHeader,
         },
       };
+      console.log(axiosConfig);
       const response = await axios(axiosConfig);
       if (recipientName === 'products' && method === 'GET') {
         const cacheKey = `${recipientName}-${JSON.stringify(req.query)}`;
         console.log('Caching response with key:', cacheKey);
         this.cache.set(cacheKey, response.data);
       }
+      console.log(response.data);
       res.status(response.status).json(response.data);
     } catch (error) {
       res
