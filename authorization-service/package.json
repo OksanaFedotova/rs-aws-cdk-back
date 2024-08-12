@@ -1,8 +1,8 @@
 {
-  "name": "rs-aws-cdk-back",
+  "name": "authorization-service",
   "version": "0.1.0",
   "bin": {
-    "rs-aws-cdk-back": "bin/rs-aws-cdk-back.js"
+    "authorization-service": "bin/authorization-service.js"
   },
   "scripts": {
     "build": "tsc",
